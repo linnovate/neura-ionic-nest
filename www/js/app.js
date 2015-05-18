@@ -20,13 +20,11 @@ angular.module('starter', ['ionic', 'starter.controllers'])
 
 
     if (window.NeuraNest) {
-      window.setTimeout(function() {
-        NeuraNest.greet("HI", function(message) {
-          alert(message);
-        }, function() {
-            alert("Error calling Hello Plugin");
-        });
-      }, 5000);
+      NeuraNest.greet("HI", function(message) {
+        alert(message);
+      }, function() {
+          alert("Error calling Hello Plugin");
+      });
     }
   });
 })

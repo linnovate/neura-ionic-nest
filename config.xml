@@ -4,8 +4,8 @@
   <description>
         An Ionic Framework and Cordova project.
     </description>
-  <author email="hi@ionicframework" href="http://ionicframework.com/">
-      Ionic Framework Team
+  <author email="ehud@linnovate.net" href="http://linnovate.net/">
+      Linnovate Technologies
     </author>
   <content src="index.html"/>
   <access origin="*"/>
