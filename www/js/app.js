@@ -20,10 +20,10 @@ angular.module('starter', ['ionic', 'starter.controllers'])
 
 
     if (window.NeuraNest) {
-      NeuraNest.greet("HI", function(message) {
+      NeuraNest.authenticate(function(message) {
         alert(message);
       }, function() {
-          alert("Error calling Hello Plugin");
+          alert("Error calling NeuraNest Plugin");
       });
     }
   });
