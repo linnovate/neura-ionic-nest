@@ -21,9 +21,14 @@ angular.module('starter', ['ionic', 'starter.controllers'])
 
     if (window.NeuraNest) {
       NeuraNest.authenticate(function(message) {
-        alert(message);
+        //alert(message);
+        NeuraNest.register(function(message) {
+          //alert(message);
+        }, function() {
+          alert("Error calling Register action in NeuraNest Plugin");
+        });
       }, function() {
-          alert("Error calling NeuraNest Plugin");
+          alert("Error calling Authenticate action in NeuraNest Plugin");
       });
     }
   });
