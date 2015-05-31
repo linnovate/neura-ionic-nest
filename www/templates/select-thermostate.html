@@ -1,0 +1,10 @@
+<ion-modal-view>
+  <ion-header-bar>
+    <h1 class="title">Pick thermostate</h1>
+  </ion-header-bar>
+  <ion-content>
+    <ion-list>
+      <ion-item ng-repeat="item in thermostates" ng-click="pickThermostate(item.device_id)">{{item.name}}</ion-item>
+    </ion-list>
+  </ion-content>
+</ion-modal-view>

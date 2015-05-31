@@ -1,0 +1,26 @@
+<ion-view view-title="Welcome" class="welcome">
+  <ion-content>
+    <div class="row">
+        <div class="col">
+             <button ng-click="connectNeura()"
+                     class="button"
+                     ng-class="{'button-assertive': !neuraConnected, 'button-balanced': neuraConnected}"
+             >Connect to TheNeura</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+             <button ng-click="connectNest()"
+                     class="button"
+                     ng-class="{'button-assertive': !nestConnected, 'button-balanced': nestConnected}"
+             >Connect to Nest</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col"><button ui-sref="app.status" class="button button-stabilized">Status</button></div>
+    </div>
+    <div class="row">
+        <div class="col"><button ui-sref="app.logs" class="button button-light">View Logs</button></div>
+    </div>
+  </ion-content>
+</ion-view>

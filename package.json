@@ -17,7 +17,11 @@
   "cordovaPlugins": [
     "com.ionic.keyboard",
     "org.apache.cordova.console",
-    "org.apache.cordova.device"
+    "org.apache.cordova.device",
+    {
+      "locator": "https://git-wip-us.apache.org/repos/asf/cordova-plugin-inappbrowser.git",
+      "id": "cordova-plugin-inappbrowser"
+    }
   ],
   "cordovaPlatforms": [
     "ios",

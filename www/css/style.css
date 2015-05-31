@@ -1,1 +1,18 @@
-/* Empty. Add your own CSS if you like */
+@font-face {
+    font-family: "Aileron",
+    src: url("fonts/Aileron-Bold.otf");
+}
+
+.welcome button {
+    width: 100%;
+}
+
+.statusPage {
+    background-size: cover;
+    background-color: rgba(255, 255,255, 0.5);
+}
+
+.statusPage .temperature {
+    padding-left: 10px;
+    font-size: 20px;
+}

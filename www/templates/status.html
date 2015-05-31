@@ -1,0 +1,16 @@
+<ion-view class="statusPage main-image">
+  <ion-header-bar>
+    <h1 class="title">Status</h1>
+  </ion-header-bar>
+  <ion-content no-scroll class="statusPage">
+    <style>
+        .main-image {
+            background-image: url('{{state.img}}');
+        }
+    </style>
+    <div ></div>
+    <h1>{{ state.text }}</h1>
+    <h2>You thermostate is {{ thermostateMode }}</h2>
+    <div class="temperature">{{ targetTemperature }} °C</div>
+  </ion-content>
+</ion-view>

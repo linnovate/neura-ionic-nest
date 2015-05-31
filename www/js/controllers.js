@@ -1,48 +1,86 @@
-angular.module('starter.controllers', [])
+angular.module('starter')
+  .controller('AppCtrl', function($scope, $ionicModal, $timeout) {
+    // Form data for the login modal
+    $scope.loginData = {};
 
-.controller('AppCtrl', function($scope, $ionicModal, $timeout) {
-  // Form data for the login modal
-  $scope.loginData = {};
+    // Create the login modal that we will use later
+  })
 
-  // Create the login modal that we will use later
-  $ionicModal.fromTemplateUrl('templates/login.html', {
-    scope: $scope
-  }).then(function(modal) {
-    $scope.modal = modal;
-  });
+  .controller('WelcomeCtrl', function($scope, nestAPI, neuraAPI, $ionicLoading, $ionicModal, globalStorage, neuraToNest, $timeout) {
+    //FIXME: replace with events
+    $scope.$watch(
+      function ( ) { return !!nestAPI.getToken() && !!globalStorage.getThermostateId(); },
+      function (v) { $scope.nestConnected = v;    }
+    );
 
-  // Triggered in the login modal to close it
-  $scope.closeLogin = function() {
-    $scope.modal.hide();
-  };
+    $scope.$watch(
+      function ( ) { return neuraAPI.isConnected(); },
+      function (v) { $scope.neuraConnected = v;     }
+    );
 
-  // Open the login modal
-  $scope.login = function() {
-    $scope.modal.show();
-  };
+    $scope.$watch(
+      function ( ) { return $scope.nestConnected && $scope.neuraConnected; },
+      function (v) { if (v) { $timeout(function () { neuraToNest.startWatching(); }, 5000); } }
+    );
 
-  // Perform the login action when the user submits the login form
-  $scope.doLogin = function() {
-    console.log('Doing login', $scope.loginData);
+    $ionicModal.fromTemplateUrl('templates/select-thermostate.html', {
+      scope: $scope,
+      animation: 'slide-in-up'
+    }).then(function(modal) {
+      $scope.thermostateModal = modal;
+    });
 
-    // Simulate a login delay. Remove this and replace with your login
-    // code if using a login system
-    $timeout(function() {
-      $scope.closeLogin();
-    }, 1000);
-  };
-})
+    $scope.connectNest = function () {
+      nestAPI.authorize().then(function () {
+        $ionicLoading.show({ template: 'Loading...'});
+        return nestAPI.getThermostates();
+      }).then(function (list) {
+        $ionicLoading.hide();
+        $scope.thermostates = list;
+        $scope.thermostateModal.show();
+      });
+    };
 
-.controller('PlaylistsCtrl', function($scope) {
-  $scope.playlists = [
-    { title: 'Reggae', id: 1 },
-    { title: 'Chill', id: 2 },
-    { title: 'Dubstep', id: 3 },
-    { title: 'Indie', id: 4 },
-    { title: 'Rap', id: 5 },
-    { title: 'Cowbell', id: 6 }
-  ];
-})
+    $scope.connectNeura = function () {
+      neuraAPI.connect().then(function () {
+        console.log('connected');
+      });
+    };
 
-.controller('PlaylistCtrl', function($scope, $stateParams) {
-});
+    $scope.pickThermostate = function (id) {
+      $scope.thermostateModal.hide();
+      globalStorage.setThermostateId(id);
+    }
+  })
+  .controller('StatusCtrl', function($scope, $rootScope, globalStorage, nestAPI, globalStorage, neuraToNest, $interval) {
+    var stateToText = {
+      '': {text: 'Normal mode', img: 'img/normal.png'},
+      'running': {text: 'You are running', img: 'img/running.png' },
+      'walking': {text: 'You are walking', img: 'img/walking.png' },
+      'driving': {text: 'You are driving', img: 'img/driving.png' }
+    };
+
+    $scope.$watch(function () {
+      return neuraToNest.getState();
+    }, function (state) {
+      $scope.state = stateToText[state];
+    });
+
+    function updateThermostateInfo() {
+      nestAPI.getThermostateInfo(globalStorage.getThermostateId()).then(function (data) {
+        $scope.thermostateMode = data.hvac_mode;
+        $scope.targetTemperature = data.target_temperature_c;
+      });
+    }
+    $scope.thermostateMode = "off";
+    $scope.targetTemperature = 20;
+    try {
+      updateThermostateInfo();
+      var intervalId = $interval(updateThermostateInfo, 15000);
+    } catch (e) {}
+    $scope.$on('$destroy', function () {
+      $interval.cancel(intervalId);
+    });
+  })
+;
+
