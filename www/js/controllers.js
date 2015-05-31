@@ -65,14 +65,20 @@ angular.module('starter')
     }, function (state) {
       $scope.state = stateToText[state];
     });
+    
+    var hvacModes = {
+      'heat': 'Heating',
+      'off': 'Shutdown',
+      'cool': 'Cooling'
+    };
 
     function updateThermostateInfo() {
       nestAPI.getThermostateInfo(globalStorage.getThermostateId()).then(function (data) {
-        $scope.thermostateMode = data.hvac_mode;
+        $scope.thermostateMode = hvacModes[data.hvac_mode] || data.hvac_mode;
         $scope.targetTemperature = data.target_temperature_c;
       });
     }
-    $scope.thermostateMode = "off";
+    $scope.thermostateMode = hvacModes.off;
     $scope.targetTemperature = 20;
     try {
       updateThermostateInfo();

@@ -1,6 +1,15 @@
 @font-face {
-    font-family: "Aileron",
-    src: url("fonts/Aileron-Bold.otf");
+  font-family: 'Aileron';
+  font-style: normal;
+  font-weight: 200;
+  src: url(../fonts/Aileron-Regular.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Aileron';
+  font-style: normal;
+  font-weight: 700;
+  src: url(../fonts/Aileron-Bold.otf) format('opentype');
 }
 
 .welcome button {
@@ -9,10 +18,55 @@
 
 .statusPage {
     background-size: cover;
-    background-color: rgba(255, 255,255, 0.5);
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.statusPage h1 {
+margin-left: 10px;
+margin-top: 10px;
+font-family: Aileron;
+color:  #ffffff;
+font-size: 60px; /* Приближение из-за подстановки шрифтов */
+font-weight: 200;
+text-align: left;
 }
 
 .statusPage .temperature {
+    background-color:  rgba(0, 0, 0, 0.24);
+    margin: 20px auto;
+    width: 60vw;
+    height: 60vw;
+    line-height: 60vw;
+    left: 20vw;
+    border-radius: 50%;
     padding-left: 10px;
+    font-family: Aileron;
+    color:  #ffffff;
+    font-size: 100px;
+    text-align: center;
+    font-weight: 200;
+}
+
+.statusPage hr {
+  margin-left: 10px;
+  margin-right: 10px;
+  opacity: 0.5;
+}
+
+.statusPage h2 {
+    margin-left: 10px;
+    font-family: Aileron;
+    color:  #ffffff;
     font-size: 20px;
+    font-weight: 700;
+    text-align: left;
+}
+
+.statusPage h3 {
+    margin-left: 10px;
+    font-family: Aileron;
+    color:  #ffffff;
+    font-size: 40px;
+    font-weight: 700;
+    text-align: left;
 }
