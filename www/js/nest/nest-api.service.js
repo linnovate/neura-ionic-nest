@@ -79,7 +79,7 @@ angular.module('nest-api', [])
 
 
     this.thermostateTargetTemperature = function (id, newT) {
-      return fieldGetterSetter(id, 'target_temperature_c', newT);
+      return fieldGetterSetter(id, 'target_temperature_f', newT);
     };
 
     this.thermostateMode = function (id, newMode) {

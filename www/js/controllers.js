@@ -75,11 +75,11 @@ angular.module('starter')
     function updateThermostateInfo() {
       nestAPI.getThermostateInfo(globalStorage.getThermostateId()).then(function (data) {
         $scope.thermostateMode = hvacModes[data.hvac_mode] || data.hvac_mode;
-        $scope.targetTemperature = data.target_temperature_c;
+        $scope.targetTemperature = data.target_temperature_f;
       });
     }
     $scope.thermostateMode = hvacModes.off;
-    $scope.targetTemperature = 20;
+    $scope.targetTemperature = '';
     try {
       updateThermostateInfo();
       var intervalId = $interval(updateThermostateInfo, 15000);

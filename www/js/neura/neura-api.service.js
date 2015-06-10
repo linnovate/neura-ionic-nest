@@ -11,7 +11,11 @@ angular.module('neura-api', [])
     'userStartedDriving',
     'userStartedWalking',
     'userArrivedHome',
-    'userLeftHome'
+    'userLeftHome',
+    'userArrivedToWorkByWalking',
+    'userArrivedHomeByWalking',
+    'userArrivedHomeByRunning',
+    'userArrivedToWorkByRunning'
   ])
   /*
    .constant('neuraAppUid', '12abac932242f5d71f16560aadebf9f97c23cc4be9d71e43d6748792d763a849')

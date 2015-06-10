@@ -45,45 +45,63 @@ angular.module('starter')
       }
     }
 
-    function setTargetTemperature(ruleMap) {
+    function setTargetTemperature(delta) {
       return function () {
-        $log.debug('Setting temperature to default ' + ruleMap[state]);
-        nestAPI.thermostateTargetTemperature(
-          globalStorage.getThermostateId(),
-          self.getTargetTemperature() + (ruleMap[state] || 0)
-        );
+        $log.debug('Setting temperature to ' + delta);
+        nestAPI.thermostateTargetTemperature(globalStorage.getThermostateId()).then(function (t) {
+          nestAPI.thermostateTargetTemperature(
+            globalStorage.getThermostateId(),
+            self.getTargetTemperature() + (ruleMap[state] || 0)
+          );
+        });
       }
     }
 
     function setThermostateMode(mode) {
       return function () {
-        $log.debug('Setting thermostate mode to ' + mode);
-        nestAPI.thermostateMode(globalStorage.getThermostateId(), mode);
+        if (mode === 'off') {
+          $log.debug('Setting thermostate mode to ' + mode);
+          nestAPI.thermostateMode(globalStorage.getThermostateId(), mode);
+        } else {
+          nestAPI.getThermostateInfo(globalStorage.getThermostateId()).then(function (data) {
+            var newMode = 'heat';
+            var currentTemperature = data.ambient_temperature_f;
+            var targetTemperature = data.target_temperature_f;
+            if (currentTemperature > targetTemperature) {
+              newMode = 'cool'
+            }
+            $log.debug('Ambient temperature is ' + currentTemperature);
+            $log.debug('Target temperature is ' + targetTemperature);
+            $log.debug('New mode is ' + newMode);
+            nestAPI.thermostateMode(globalStorage.getThermostateId(), mode);
+          });
+        }
       }
     }
+
 
     var eventActions = {
       userStartedWalking: enterState('walking'),
       userFinishedWalking: leaveState('walking'),
       userStartedRunning: enterState('running'),
       userFinishedRunning: leaveState('running'),
-      userArrivedHome: setTargetTemperature({
-        '': 0,
-        'walking': -2,
-        'running': -4
-      }),
-      userWokeUp: setThermostateMode('heat'),
+      userArrivedHomeByRunning: setTargetTemperature(-4 * 1.8),
+      userArrivedHomeByWalking: setTargetTemperature(-2 * 1.8),
+      userWokeUp: setThermostateMode('on'),
       userStartedSleeping: setThermostateMode('off')
     };
 
+    var popups = {
+      userArrivedHomeByRunning: 'Welcome home! Your Nest will now cool down your house',
+      userArrivedHomeByWalking: 'Welcome home! Your Nest will now cool down your house',
+      userWokeUp: 'Rise and shine! Nest is now on'
+    };
+    
+    
 
     this.getState = function () {
       return state;
     }
-
-    this.getTargetTemperature = function () {
-      return 20;
-    };
 
     this.handleEvent = function (event) {
       $log.debug('Got event from Neura: ' + event);
@@ -93,6 +111,12 @@ angular.module('starter')
 
       } else {
         $log.debug('No handler for this event');
+      }
+      if (popups[event]) {
+        plugin.notification.local.add({
+          title: "NeuraNest",
+          message: popups[event]
+        });
       }
     };
 
