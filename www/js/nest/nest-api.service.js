@@ -11,7 +11,7 @@ angular.module('nest-api', [])
     };
 
 
-    this.getThermostates = function () {
+    this.getThermostats = function () {
       var token = self.getToken();
       if (!token) {
         throw new Error('No token');
@@ -38,9 +38,9 @@ angular.module('nest-api', [])
       }
 
       if (value) {
-        $log.debug('Setting value ' + field + ' for thermostate ' + id + ' to ' + value);
+        $log.debug('Setting value ' + field + ' for thermostat ' + id + ' to ' + value);
       } else {
-        $log.debug('Querying value ' + field + ' for thermostate ' + id);
+        $log.debug('Querying value ' + field + ' for thermostat ' + id);
       }
 
       var url = [
@@ -56,13 +56,13 @@ angular.module('nest-api', [])
       });
     }
 
-    this.getThermostateInfo = function (id)  {
+    this.getThermostatInfo = function (id)  {
       var token = self.getToken();
       if (!token) {
         throw new Error('No token');
       }
 
-      $log.debug('Querying info for thermostate ' + id);
+      $log.debug('Querying info for thermostat ' + id);
 
       var url = [
         'https://developer-api.nest.com/devices/thermostats',
@@ -78,11 +78,11 @@ angular.module('nest-api', [])
 
 
 
-    this.thermostateTargetTemperature = function (id, newT) {
+    this.thermostatTargetTemperature = function (id, newT) {
       return fieldGetterSetter(id, 'target_temperature_f', newT);
     };
 
-    this.thermostateMode = function (id, newMode) {
+    this.thermostatMode = function (id, newMode) {
       if (newMode) {
         newMode = '"' + newMode + '"';
       }

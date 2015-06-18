@@ -1,0 +1,13 @@
+<ion-modal-view>
+  <ion-header-bar>
+    <h1 class="title">Pick thermostats to control</h1>
+    <button class="button" ng-click="thermostatModal.hide()">Done</button>
+  </ion-header-bar>
+  <ion-content>
+    <ion-toggle ng-repeat="item in thermostats" ng-model="item.selected" ng-change="pickThermostat(item)">
+      {{item.name}}
+      <span ng-if="item.device_id == workThermostatId">(Work)</span>
+      <span ng-if="item.device_id == homeThermostatId">(Home)</span>
+    </ion-toggle>
+  </ion-content>
+</ion-modal-view>

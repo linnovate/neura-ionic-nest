@@ -1,15 +1,12 @@
 angular.module('starter')
-  .controller('AppCtrl', function($scope, $ionicModal, $timeout) {
-    // Form data for the login modal
+  .controller('AppCtrl', function($scope) {
     $scope.loginData = {};
-
-    // Create the login modal that we will use later
   })
 
-  .controller('WelcomeCtrl', function($scope, nestAPI, neuraAPI, $ionicLoading, $ionicModal, globalStorage, neuraToNest, $timeout) {
+  .controller('WelcomeCtrl', function($scope, nestAPI, neuraAPI, $ionicLoading, $ionicModal, globalStorage, neuraToNest, $timeout, $ionicPopup) {
     //FIXME: replace with events
     $scope.$watch(
-      function ( ) { return !!nestAPI.getToken() && !!globalStorage.getThermostateId(); },
+      function ( ) { return !!nestAPI.getToken() && (!!globalStorage.getHomeThermostatId() || !!globalStorage.getWorkThermostatId()); },
       function (v) { $scope.nestConnected = v;    }
     );
 
@@ -23,21 +20,36 @@ angular.module('starter')
       function (v) { if (v) { neuraToNest.startWatching(); }               }
     );
 
-    $ionicModal.fromTemplateUrl('templates/select-thermostate.html', {
+    $scope.$watch(
+      function ( ) { return globalStorage.getWorkThermostatId(); },
+      function (v) { $scope.workThermostatId = v;     }
+    );
+
+    $scope.$watch(
+      function ( ) { return globalStorage.getHomeThermostatId(); },
+      function (v) { $scope.homeThermostatId = v;     }
+    );
+    $ionicModal.fromTemplateUrl('templates/select-thermostat.html', {
       scope: $scope,
-      animation: 'slide-in-up'
+      animation: 'slide-in-up',
+      backdropClickToClose: false
     }).then(function(modal) {
-      $scope.thermostateModal = modal;
+      $scope.thermostatModal = modal;
     });
 
     $scope.connectNest = function () {
       nestAPI.authorize().then(function () {
         $ionicLoading.show({ template: 'Loading...'});
-        return nestAPI.getThermostates();
+        return nestAPI.getThermostats();
       }).then(function (list) {
         $ionicLoading.hide();
-        $scope.thermostates = list;
-        $scope.thermostateModal.show();
+        list.forEach(function (item) {
+          if (item.device_id == globalStorage.getHomeThermostatId() || item.device_id == globalStorage.getWorkThermostatId()) {
+            item.selected = true;
+          }
+        });
+        $scope.thermostats = list;
+        $scope.thermostatModal.show();
       });
     };
 
@@ -47,9 +59,38 @@ angular.module('starter')
       });
     };
 
-    $scope.pickThermostate = function (id) {
-      $scope.thermostateModal.hide();
-      globalStorage.setThermostateId(id);
+    $scope.pickThermostat = function (thermostat) {
+      if (thermostat.selected === false) {
+        if (globalStorage.getHomeThermostatId() == thermostat.device_id) {
+          globalStorage.setHomeThermostatId(null);
+        }
+        if (globalStorage.getWorkThermostatId() == thermostat.device_id) {
+          globalStorage.setWorkThermostatId(null);
+        }
+        return;
+      }
+      $ionicPopup.show({
+        template: 'Is it home or office thermostat?',
+        title: 'Thermostat type',
+        scope: $scope,
+        buttons: [
+          { text: 'Home', onTap: function () { return 'home' }},
+          { text: 'Office', onTap: function () { return 'office' }}
+        ]
+      }).then(function (res) {
+        if (res === 'office') {
+          if (globalStorage.getHomeThermostatId() == thermostat.device_id) {
+            globalStorage.setHomeThermostatId(null);
+          }
+          globalStorage.setWorkThermostatId(thermostat.device_id);
+        }
+        if (res === 'home') {
+          if (globalStorage.getWorkThermostatId() == thermostat.device_id) {
+            globalStorage.setWorkThermostatId(null);
+          }
+          globalStorage.setHomeThermostatId(thermostat.device_id);
+        }
+      });
     }
   })
   .controller('StatusCtrl', function($scope, $rootScope, globalStorage, nestAPI, globalStorage, neuraToNest, $interval) {
@@ -73,17 +114,17 @@ angular.module('starter')
       'cool': 'Cooling'
     };
 
-    function updateThermostateInfo() {
-      nestAPI.getThermostateInfo(globalStorage.getThermostateId()).then(function (data) {
-        $scope.thermostateMode = hvacModes[data.hvac_mode] || data.hvac_mode;
+    function updateThermostatInfo() {
+      nestAPI.getThermostatInfo(globalStorage.getHomeThermostatId()).then(function (data) {
+        $scope.thermostatMode = hvacModes[data.hvac_mode] || data.hvac_mode;
         $scope.targetTemperature = data.target_temperature_f;
       });
     }
-    $scope.thermostateMode = hvacModes.off;
+    $scope.thermostatMode = hvacModes.off;
     $scope.targetTemperature = '';
     try {
-      updateThermostateInfo();
-      var intervalId = $interval(updateThermostateInfo, 15000);
+      updateThermostatInfo();
+      var intervalId = $interval(updateThermostatInfo, 15000);
     } catch (e) {}
     $scope.$on('$destroy', function () {
       $interval.cancel(intervalId);

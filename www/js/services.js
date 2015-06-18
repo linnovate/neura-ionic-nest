@@ -15,12 +15,21 @@ angular.module('starter')
       localStorage.setItem('globalStorage', JSON.stringify(globalStorage));
     }
 
-    this.getThermostateId = function () {
-      return globalStorage.thermostatId;
+    this.getWorkThermostatId = function () {
+      return globalStorage.workThermostatId;
     }
 
-    this.setThermostateId = function (id) {
-      globalStorage.thermostatId = id;
+    this.setWorkThermostatId = function (id) {
+      globalStorage.workThermostatId = id;
+      saveToLocalStorage();
+    }
+
+    this.getHomeThermostatId = function () {
+      return globalStorage.homeThermostatId;
+    }
+
+    this.setHomeThermostatId = function (id) {
+      globalStorage.homeThermostatId = id;
       saveToLocalStorage();
     }
   })
@@ -43,16 +52,30 @@ angular.module('starter')
       }
     }
 
-    function setTargetTemperature(delta) {
+    function resolveWhere(where) {
+      if (where === 'home') {
+        return globalStorage.getHomeThermostatId();
+      }
+      if (where === 'work') {
+        return globalStorage.getWorkThermostatId();
+      }
+    }
+
+    function setTargetTemperature(where, delta) {
       return function () {
-        var thermostateOnFn = setThermostateMode('on');
-        thermostateOnFn().then(function () {
+        var tId = resolveWhere(where);
+        if (!tId) {
+          $log('No thermostat configured at this point');
+          return;
+        }
+        var thermostatOnFn = setThermostatMode(where, 'on');
+        thermostatOnFn().then(function () {
           $log.debug('Setting temperature to ' + delta);
-          return nestAPI.thermostateTargetTemperature(globalStorage.getThermostateId());
+          return nestAPI.thermostatTargetTemperature(tId);
         }).then(function (t) {
           $log.debug('Current temperature is ' + t + ', changing by delta ' + delta);
-          nestAPI.thermostateTargetTemperature(
-            globalStorage.getThermostateId(),
+          nestAPI.thermostatTargetTemperature(
+            tId,
             t + (delta || 0)
           );
         }).catch(function (e) {
@@ -66,13 +89,18 @@ angular.module('starter')
       }
     }
 
-    function setThermostateMode(mode) {
+    function setThermostatMode(where, mode) {
       return function () {
+        var tId = resolveWhere(where);
+        if (!tId) {
+          $log('No thermostat configured at this point');
+          return;
+        }
         if (mode === 'off') {
-          $log.debug('Setting thermostate mode to ' + mode);
-          return nestAPI.thermostateMode(globalStorage.getThermostateId(), mode);
+          $log.debug('Setting thermostat mode to ' + mode);
+          return nestAPI.thermostatMode(tId, mode);
         } else {
-          return nestAPI.getThermostateInfo(globalStorage.getThermostateId()).then(function (data) {
+          return nestAPI.getThermostatInfo(tId).then(function (data) {
             var newMode = 'heat';
             var currentTemperature = data.ambient_temperature_f;
             var targetTemperature = data.target_temperature_f;
@@ -82,7 +110,7 @@ angular.module('starter')
             $log.debug('Ambient temperature is ' + currentTemperature);
             $log.debug('Target temperature is ' + targetTemperature);
             $log.debug('New mode is ' + newMode);
-            return nestAPI.thermostateMode(globalStorage.getThermostateId(), newMode);
+            return nestAPI.thermostatMode(tId, newMode);
           });
         }
       }
@@ -90,22 +118,30 @@ angular.module('starter')
 
 
     var eventActions = {
-      userStartedWalking: enterState('walking'),
-      userFinishedWalking: leaveState('walking'),
-      userStartedRunning: enterState('running'),
-      userFinishedRunning: leaveState('running'),
-      userArrivedHomeByRunning: setTargetTemperature(-7),
-      userArrivedHomeByWalking: setTargetTemperature(-4),
-      userArrivedHome: setThermostateMode('on'),
-      userWokeUp: setThermostateMode('on'),
-      userStartedSleeping: [enterState('sleeping'), setThermostateMode('off')]
+      userStartedWalking        : enterState('walking'),
+      userFinishedWalking       : leaveState('walking'),
+      userStartedRunning        : enterState('running'),
+      userFinishedRunning       : leaveState('running'),
+      userArrivedHomeByRunning  : setTargetTemperature('home', -7),
+      userArrivedHomeByWalking  : setTargetTemperature('home', -4),
+      userArrivedToWorkByRunning: setTargetTemperature('work', -7),
+      userArrivedToWorkByWalking: setTargetTemperature('work', -4),
+      userArrivedHome           : setThermostatMode('home', 'on'),
+      userArrivedToWork         : setThermostatMode('work', 'on'),
+      userLeftWork              : setThermostatMode('work', 'off'),
+      userWokeUp                : setThermostatMode('home', 'on'),
+      userStartedSleeping       : [enterState('sleeping'), setThermostatMode('home', 'off')]
     };
 
     var popups = {
-      userArrivedHome:          'Welcome home! Adjusting your Nest…',
-      userArrivedHomeByRunning: 'Welcome home! Your Nest will now cool down your house',
-      userArrivedHomeByWalking: 'Welcome home! Your Nest will now cool down your house',
-      userWokeUp:               'Rise and shine! Nest is now on'
+      userArrivedHome           : 'Welcome home! Adjusting your Nest…',
+      userArrivedHomeByRunning  : 'Welcome home! Your Nest will now cool down your house',
+      userArrivedHomeByWalking  : 'Welcome home! Your Nest will now cool down your house',
+      userArrivedToWork         : 'Welcome back! Adjusting your work Nest…',
+      userArrivedToWorkByRunning: 'Welcome back! Nest will now cool down your workplace',
+      userArrivedToWorkByWalking: 'Welcome back! Nest will now cool down your workplace',
+      userLeftWork              : 'Au revoir! Putting your work Nest off',
+      userWokeUp:                 'Rise and shine! Nest is now on'
     };
 
     this.getState = function () {
