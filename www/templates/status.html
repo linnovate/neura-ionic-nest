@@ -10,6 +10,6 @@
     <hr/>
     <h2>Your thermostate is</h2>
     <h3>{{ thermostateMode }}</h2>
-    <div class="temperature">{{ targetTemperature }}°</div>
+    <div class="temperature" ng-if="targetTemperature">{{ targetTemperature }}°</div>
   </ion-content>
 </ion-view>

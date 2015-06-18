@@ -5,7 +5,7 @@
              <button ng-click="connectNeura()"
                      class="button"
                      ng-class="{'button-assertive': !neuraConnected, 'button-balanced': neuraConnected}"
-             >Connect to TheNeura</button>
+             >{{neuraConnected ? 'Connected to my Neura' : 'Connect to my Neura'}}</button>
         </div>
     </div>
     <div class="row">
@@ -13,7 +13,7 @@
              <button ng-click="connectNest()"
                      class="button"
                      ng-class="{'button-assertive': !nestConnected, 'button-balanced': nestConnected}"
-             >Connect to Nest</button>
+             >{{nestConnected ? 'Connected to my Nest' : 'Connect to my Nest'}}</button>
         </div>
     </div>
     <div class="row">

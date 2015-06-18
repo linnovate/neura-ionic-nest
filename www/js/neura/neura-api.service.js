@@ -26,8 +26,8 @@ angular.module('neura-api', [])
    'userArrivedHome'
    ])*/
 
-  .service('neuraAPI', function ($q, neuraAppUid, neuraAppSecret, neuraPermissions)  {
-    var connected = false;
+  .service('neuraAPI', function ($log, $q, neuraAppUid, neuraAppSecret, neuraPermissions)  {
+    var connected = !!localStorage.getItem('neura-connected');
 
     this.isConnected = function () {
       return connected;
@@ -36,11 +36,16 @@ angular.module('neura-api', [])
 
     this.connect = function () {
       var defer = $q.defer();
-      window.NeuraNest.authenticate(neuraAppUid, neuraAppSecret, neuraPermissions, function () {
-        connected = true;
-        defer.resolve(true);
-      }, function () {
-        defer.reject(false);
+      window.NeuraNest.authenticate(neuraAppUid, neuraAppSecret, neuraPermissions)
+      window.NeuraNest.on('authenticate', function (data) {
+        if (data.success) { 
+          $log.debug('connected to Neura');
+          localStorage.setItem('neura-connected', 1);
+          connected = true;
+          defer.resolve(true);
+        } else {
+          defer.reject(false);
+        }
       });
       return defer.promise;
     }

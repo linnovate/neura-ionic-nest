@@ -29,12 +29,10 @@ angular.module('starter')
     var self = this;
     var state ='';
 
-    function leaveState(stateName) {
+    function leaveState() {
       return function () {
-        if (state === stateName) {
-          $log.debug('Cancelling state ' + stateName);
-          state = '';
-        }
+        $log.debug('Cancelling state ' + state + ', normal mode now');
+        state = '';
       }
     }
 
@@ -47,12 +45,23 @@ angular.module('starter')
 
     function setTargetTemperature(delta) {
       return function () {
-        $log.debug('Setting temperature to ' + delta);
-        nestAPI.thermostateTargetTemperature(globalStorage.getThermostateId()).then(function (t) {
+        var thermostateOnFn = setThermostateMode('on');
+        thermostateOnFn().then(function () {
+          $log.debug('Setting temperature to ' + delta);
+          return nestAPI.thermostateTargetTemperature(globalStorage.getThermostateId());
+        }).then(function (t) {
+          $log.debug('Current temperature is ' + t + ', changing by delta ' + delta);
           nestAPI.thermostateTargetTemperature(
             globalStorage.getThermostateId(),
-            self.getTargetTemperature() + (ruleMap[state] || 0)
+            t + (delta || 0)
           );
+        }).catch(function (e) {
+          console.log(e);
+          var message = ': ';
+          if (e.data && e.data.error) {
+            message += e.data.error
+          }
+          $log.debug('Got error on setting target temperature' + message);
         });
       }
     }
@@ -61,9 +70,9 @@ angular.module('starter')
       return function () {
         if (mode === 'off') {
           $log.debug('Setting thermostate mode to ' + mode);
-          nestAPI.thermostateMode(globalStorage.getThermostateId(), mode);
+          return nestAPI.thermostateMode(globalStorage.getThermostateId(), mode);
         } else {
-          nestAPI.getThermostateInfo(globalStorage.getThermostateId()).then(function (data) {
+          return nestAPI.getThermostateInfo(globalStorage.getThermostateId()).then(function (data) {
             var newMode = 'heat';
             var currentTemperature = data.ambient_temperature_f;
             var targetTemperature = data.target_temperature_f;
@@ -73,7 +82,7 @@ angular.module('starter')
             $log.debug('Ambient temperature is ' + currentTemperature);
             $log.debug('Target temperature is ' + targetTemperature);
             $log.debug('New mode is ' + newMode);
-            nestAPI.thermostateMode(globalStorage.getThermostateId(), mode);
+            return nestAPI.thermostateMode(globalStorage.getThermostateId(), newMode);
           });
         }
       }
@@ -85,19 +94,19 @@ angular.module('starter')
       userFinishedWalking: leaveState('walking'),
       userStartedRunning: enterState('running'),
       userFinishedRunning: leaveState('running'),
-      userArrivedHomeByRunning: setTargetTemperature(-4 * 1.8),
-      userArrivedHomeByWalking: setTargetTemperature(-2 * 1.8),
+      userArrivedHomeByRunning: setTargetTemperature(-7),
+      userArrivedHomeByWalking: setTargetTemperature(-4),
+      userArrivedHome: setThermostateMode('on'),
       userWokeUp: setThermostateMode('on'),
-      userStartedSleeping: setThermostateMode('off')
+      userStartedSleeping: [enterState('sleeping'), setThermostateMode('off')]
     };
 
     var popups = {
+      userArrivedHome:          'Welcome home! Adjusting your Nest…',
       userArrivedHomeByRunning: 'Welcome home! Your Nest will now cool down your house',
       userArrivedHomeByWalking: 'Welcome home! Your Nest will now cool down your house',
-      userWokeUp: 'Rise and shine! Nest is now on'
+      userWokeUp:               'Rise and shine! Nest is now on'
     };
-    
-    
 
     this.getState = function () {
       return state;
@@ -106,7 +115,10 @@ angular.module('starter')
     this.handleEvent = function (event) {
       $log.debug('Got event from Neura: ' + event);
       if (eventActions[event]) {
-        eventActions[event]();
+        var eventHandlers = Array.isArray(eventActions[event]) ? eventActions[event] : [eventActions[event]];
+        eventHandlers.forEach(function (eventHandler) {
+          eventHandler();
+        });
         $rootScope.$applyAsync();
 
       } else {
@@ -121,13 +133,15 @@ angular.module('starter')
     };
 
     this.startWatching = function () {
-      window.NeuraNest.subscribe(
-        neuraPermissions,
-        angular.noop,
-        angular.noop,
-        this.handleEvent
-      );
+      var self = this;
+      window.NeuraNest.once('connect', function () {
+        console.log('connected ok');
+        window.NeuraNest.subscribe(neuraPermissions);
+        console.log('subscribing');
+        window.NeuraNest.on('event', self.handleEvent.bind(self));
+      });
+      console.log('attemping connect');
+      window.NeuraNest.connect();
     }
   });
-  
 

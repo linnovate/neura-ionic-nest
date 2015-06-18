@@ -20,7 +20,7 @@ angular.module('starter')
 
     $scope.$watch(
       function ( ) { return $scope.nestConnected && $scope.neuraConnected; },
-      function (v) { if (v) { $timeout(function () { neuraToNest.startWatching(); }, 5000); } }
+      function (v) { if (v) { neuraToNest.startWatching(); }               }
     );
 
     $ionicModal.fromTemplateUrl('templates/select-thermostate.html', {
@@ -54,10 +54,11 @@ angular.module('starter')
   })
   .controller('StatusCtrl', function($scope, $rootScope, globalStorage, nestAPI, globalStorage, neuraToNest, $interval) {
     var stateToText = {
-      '': {text: 'Normal mode', img: 'img/normal.png'},
-      'running': {text: 'You are running', img: 'img/running.png' },
-      'walking': {text: 'You are walking', img: 'img/walking.png' },
-      'driving': {text: 'You are driving', img: 'img/driving.png' }
+      ''        : {text: 'Normal mode'     , img: 'img/normal.png'  },
+      'sleeping': {text: 'You are sleeping', img: 'img/normal.png'  },
+      'running' : {text: 'You are running' , img: 'img/running.png' },
+      'walking' : {text: 'You are walking' , img: 'img/walking.png' },
+      'driving' : {text: 'You are driving' , img: 'img/driving.png' }
     };
 
     $scope.$watch(function () {
@@ -65,7 +66,7 @@ angular.module('starter')
     }, function (state) {
       $scope.state = stateToText[state];
     });
-    
+
     var hvacModes = {
       'heat': 'Heating',
       'off': 'Shutdown',
